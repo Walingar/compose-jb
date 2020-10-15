@@ -39,12 +39,17 @@ import androidx.compose.ui.unit.dp
  * @param modifier optional [Modifier] for this Icon
  * @param tint tint to be applied to [asset]
  */
+@Deprecated(
+    "Icon has been moved into the Material library: androidx.compose.material.Icon",
+    replaceWith = ReplaceWith("Icon(asset)", "androidx.compose.material.Icon")
+)
 @Composable
 fun Icon(
     asset: VectorAsset,
     modifier: Modifier = Modifier,
     tint: Color = AmbientContentColor.current
 ) {
+    @Suppress("DEPRECATION")
     Icon(
         painter = VectorPainter(asset),
         modifier = modifier,
@@ -59,6 +64,10 @@ fun Icon(
  * @param modifier optional [Modifier] for this Icon
  * @param tint tint to be applied to [asset]
  */
+@Deprecated(
+    "Icon has been moved into the Material library: androidx.compose.material.Icon",
+    replaceWith = ReplaceWith("Icon(asset)", "androidx.compose.material.Icon")
+)
 @Composable
 fun Icon(
     asset: ImageAsset,
@@ -66,6 +75,7 @@ fun Icon(
     tint: Color = AmbientContentColor.current
 ) {
     val painter = remember(asset) { ImagePainter(asset) }
+    @Suppress("DEPRECATION")
     Icon(
         painter = painter,
         modifier = modifier,
@@ -80,6 +90,10 @@ fun Icon(
  * @param modifier optional [Modifier] for this Icon
  * @param tint tint to be applied to [painter]
  */
+@Deprecated(
+    "Icon has been moved into the Material library: androidx.compose.material.Icon",
+    replaceWith = ReplaceWith("Icon(asset)", "androidx.compose.material.Icon")
+)
 @Composable
 fun Icon(
     painter: Painter,
