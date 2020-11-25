@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package androidx.compose.runtime.collection
+package androidx.compose.runtime.lint
 
-@RequiresOptIn(
-    level = RequiresOptIn.Level.ERROR,
-    message = "This is an experimental API for fast access collections and is likely to change " +
-        "before becoming stable."
-)
-@Target(
-    AnnotationTarget.CLASS,
-    AnnotationTarget.FUNCTION,
-    AnnotationTarget.PROPERTY
-)
-annotation class ExperimentalCollectionApi
+import org.jetbrains.uast.UMethod
+
+// TODO: KotlinUMethodWithFakeLightDelegate.hasAnnotation() returns null for some reason, so just
+// look at the annotations directly
+// TODO: annotations is deprecated but the replacement uAnnotations isn't available on the
+// version of lint / uast we compile against
+@Suppress("DEPRECATION")
+val UMethod.isComposable get() = annotations.any { it.qualifiedName == ComposableFqn }
+
+const val ComposableFqn = "androidx.compose.runtime.Composable"
+val ComposableShortName = ComposableFqn.split(".").last()
