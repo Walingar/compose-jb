@@ -13,11 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package androidx.compose.ui.graphics.drawscope
 
-package androidx.compose.ui.gesture
-
-@RequiresOptIn(
-    "This pointer input API is experimental and is likely to change before becoming " +
-        "stable."
-)
-annotation class ExperimentalPointerInput
+/**
+ * Receiver scope for drawing content into a layout, where the content can
+ * be drawn between other canvas operations. If [drawContent] is not called,
+ * the contents of the layout will not be drawn.
+ */
+interface ContentDrawScope : DrawScope {
+    /**
+     * Causes child drawing operations to run during the `onPaint` lambda.
+     */
+    fun drawContent()
+}

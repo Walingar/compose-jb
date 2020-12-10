@@ -14,7 +14,25 @@
  * limitations under the License.
  */
 
-package androidx.compose.ui.input.key
+package androidx.compose.desktop
 
-@RequiresOptIn("The Key Input API is experimental and is likely to change in the future.")
-annotation class ExperimentalKeyInput
+internal class TestThread(private val _run: () -> Unit) : Thread() {
+    private var exception: Exception? = null
+
+    override fun run() {
+        try {
+            _run()
+        } catch (e: InterruptedException) {
+            // ignore
+        } catch (e: Exception) {
+            exception = e
+        }
+    }
+
+    fun joinAndThrow() {
+        join()
+        if (exception != null) {
+            throw exception!!
+        }
+    }
+}

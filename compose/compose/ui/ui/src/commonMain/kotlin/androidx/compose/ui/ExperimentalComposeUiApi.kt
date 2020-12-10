@@ -13,17 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package androidx.compose.ui.test
 
-import org.jetbrains.skiko.Library
+package androidx.compose.ui
 
-fun initCompose() {
-    ComposeInit
-}
-
-private object ComposeInit {
-    init {
-        Library.load("/", "skiko")
-        System.getProperties().setProperty("kotlinx.coroutines.fast.service.loader", "false")
-    }
-}
+@RequiresOptIn("This API is experimental and is likely to change in the future.")
+annotation class ExperimentalComposeUiApi
