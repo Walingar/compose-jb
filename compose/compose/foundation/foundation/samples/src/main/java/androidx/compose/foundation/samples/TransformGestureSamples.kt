@@ -23,7 +23,7 @@ import androidx.compose.foundation.gestures.calculateCentroidSize
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateRotation
 import androidx.compose.foundation.gestures.calculateZoom
-import androidx.compose.foundation.gestures.detectMultitouchGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
@@ -45,7 +45,7 @@ import kotlin.math.roundToInt
 
 @Composable
 @Sampled
-fun DetectMultitouchGestures() {
+fun DetectTransformGestures() {
     var angle by remember { mutableStateOf(0f) }
     var zoom by remember { mutableStateOf(1f) }
     var offsetX by remember { mutableStateOf(0f) }
@@ -58,8 +58,8 @@ fun DetectMultitouchGestures() {
                 rotationZ = angle
             )
             .background(Color.Blue)
-            .pointerInput {
-                detectMultitouchGestures(
+            .pointerInput(Unit) {
+                detectTransformGestures(
                     onGesture = { _, pan, gestureZoom, gestureRotate ->
                         angle += gestureRotate
                         zoom *= gestureZoom
@@ -80,7 +80,7 @@ fun CalculateRotation() {
         Modifier
             .graphicsLayer(rotationZ = angle)
             .background(Color.Blue)
-            .pointerInput {
+            .pointerInput(Unit) {
                 forEachGesture {
                     awaitPointerEventScope {
                         awaitFirstDown()
@@ -104,7 +104,7 @@ fun CalculateZoom() {
         Modifier
             .graphicsLayer(scaleX = zoom, scaleY = zoom)
             .background(Color.Blue)
-            .pointerInput {
+            .pointerInput(Unit) {
                 forEachGesture {
                     awaitPointerEventScope {
                         awaitFirstDown()
@@ -129,7 +129,7 @@ fun CalculatePan() {
             .offset { IntOffset(offsetX.value.roundToInt(), offsetY.value.roundToInt()) }
             .graphicsLayer()
             .background(Color.Blue)
-            .pointerInput {
+            .pointerInput(Unit) {
                 forEachGesture {
                     awaitPointerEventScope {
                         awaitFirstDown()
@@ -157,7 +157,7 @@ fun CalculateCentroidSize() {
                 // Draw a circle where the gesture is
                 drawCircle(Color.Blue, centroidSize, center = position)
             }
-            .pointerInput {
+            .pointerInput(Unit) {
                 forEachGesture {
                     awaitPointerEventScope {
                         awaitFirstDown().also {
