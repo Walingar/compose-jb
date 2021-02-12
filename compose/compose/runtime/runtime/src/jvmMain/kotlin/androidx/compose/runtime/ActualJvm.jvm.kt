@@ -16,7 +16,7 @@
 
 package androidx.compose.runtime
 
-actual typealias AtomicReference<V> = java.util.concurrent.atomic.AtomicReference<V>
+internal actual typealias AtomicReference<V> = java.util.concurrent.atomic.AtomicReference<V>
 
 internal actual open class ThreadLocal<T> actual constructor(
     private val initialValue: () -> T
@@ -34,8 +34,6 @@ internal actual open class ThreadLocal<T> actual constructor(
         return initialValue.invoke()
     }
 }
-
-internal actual typealias WeakHashMap<K, V> = java.util.WeakHashMap<K, V>
 
 internal actual fun identityHashCode(instance: Any?): Int = System.identityHashCode(instance)
 
