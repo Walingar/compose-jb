@@ -1,5 +1,3 @@
-// ktlint-disable filename
-
 /*
  * Copyright 2021 The Android Open Source Project
  *
@@ -16,6 +14,18 @@
  * limitations under the License.
  */
 
-package androidx.compose.foundation
+package androidx.compose.foundation.text
 
-internal actual typealias AtomicReference<V> = java.util.concurrent.atomic.AtomicReference<V>
+import androidx.compose.ui.input.key.KeyEvent
+
+private fun Char.isPrintable(): Boolean {
+    val block = Character.UnicodeBlock.of(this)
+    return (!Character.isISOControl(this)) &&
+        this != java.awt.event.KeyEvent.CHAR_UNDEFINED &&
+        block != null &&
+        block != Character.UnicodeBlock.SPECIALS
+}
+
+actual val KeyEvent.isTypedEvent: Boolean
+    get() = nativeKeyEvent.id == java.awt.event.KeyEvent.KEY_TYPED &&
+        nativeKeyEvent.keyChar.isPrintable()

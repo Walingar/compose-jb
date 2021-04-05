@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Android Open Source Project
+ * Copyright 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package androidx.compose.foundation.text
+package androidx.compose.foundation.text.selection
 
-import androidx.compose.foundation.text.selection.TextFieldSelectionManager
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEvent
 
-internal actual fun Modifier.textFieldKeyboardModifier(
-    manager: TextFieldSelectionManager
-): Modifier = this.then(Modifier)
+internal actual val PointerEvent.isShiftPressed: Boolean
+    get() = false
