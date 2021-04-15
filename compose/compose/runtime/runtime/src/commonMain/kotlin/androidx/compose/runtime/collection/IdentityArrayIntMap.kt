@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Android Open Source Project
+ * Copyright 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,43 +18,32 @@ package androidx.compose.runtime.collection
 
 import androidx.compose.runtime.identityHashCode
 import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 
-/**
- * A set of values using an array as the backing store, ordered using [identityHashCode] for
- * both sorting and uniqueness.
- */
 @OptIn(ExperimentalContracts::class)
-internal class IdentityArraySet<T : Any> {
+internal class IdentityArrayIntMap {
     @PublishedApi
     internal var size = 0
 
     @PublishedApi
-    internal var values: Array<Any?> = arrayOfNulls(16)
+    internal var keys: Array<Any?> = arrayOfNulls(4)
 
-    /**
-     * Returns true if the set contains [value]
-     */
-    fun contains(value: T) = find(value) >= 0
+    @PublishedApi
+    internal var values: IntArray = IntArray(4)
 
-    /**
-     * Return the item at the given [index].
-     */
-    operator fun get(index: Int): T {
-        @Suppress("UNCHECKED_CAST")
-        return values[index] as T
+    operator fun get(key: Any): Int {
+        val index = find(key)
+        return if (index >= 0) values[index] else error("Key not found")
     }
-
     /**
      * Add [value] to the set and return `true` if it was added or `false` if it already existed.
      */
-    fun add(value: T): Boolean {
+    fun add(key: Any, value: Int) {
         val index: Int
         if (size > 0) {
-            index = find(value)
-
+            index = find(key)
             if (index >= 0) {
-                return false
+                values[index] = value
+                return
             }
         } else {
             index = -1
@@ -62,20 +51,38 @@ internal class IdentityArraySet<T : Any> {
 
         val insertIndex = -(index + 1)
 
-        if (size == values.size) {
-            val newSorted = arrayOfNulls<Any>(values.size * 2)
-            values.copyInto(
-                destination = newSorted,
+        if (size == keys.size) {
+            val newKeys = arrayOfNulls<Any>(keys.size * 2)
+            val newValues = IntArray(keys.size * 2)
+            keys.copyInto(
+                destination = newKeys,
                 destinationOffset = insertIndex + 1,
                 startIndex = insertIndex,
                 endIndex = size
             )
             values.copyInto(
-                destination = newSorted,
+                destination = newValues,
+                destinationOffset = insertIndex + 1,
+                startIndex = insertIndex,
+                endIndex = size
+            )
+            keys.copyInto(
+                destination = newKeys,
                 endIndex = insertIndex
             )
-            values = newSorted
+            values.copyInto(
+                destination = newValues,
+                endIndex = insertIndex
+            )
+            keys = newKeys
+            values = newValues
         } else {
+            keys.copyInto(
+                destination = keys,
+                destinationOffset = insertIndex + 1,
+                startIndex = insertIndex,
+                endIndex = size
+            )
             values.copyInto(
                 destination = values,
                 destinationOffset = insertIndex + 1,
@@ -83,49 +90,24 @@ internal class IdentityArraySet<T : Any> {
                 endIndex = size
             )
         }
+        keys[insertIndex] = key
         values[insertIndex] = value
         size++
-        return true
     }
 
     /**
-     * Remove all values from the set.
+     * Remove [key] from the map.
      */
-    fun clear() {
-        for (i in 0 until size) {
-            values[i] = null
-        }
-
-        size = 0
-    }
-
-    /**
-     * Call [block] for all items in the set.
-     */
-    inline fun forEach(block: (T) -> Unit) {
-        contract { callsInPlace(block) }
-        for (i in 0 until size) {
-            block(this[i])
-        }
-    }
-
-    /**
-     * Return true if the set is empty.
-     */
-    fun isEmpty() = size == 0
-
-    /**
-     * Returns true if the set is not empty.
-     */
-    fun isNotEmpty() = size > 0
-
-    /**
-     * Remove [value] from the set.
-     */
-    fun remove(value: T): Boolean {
-        val index = find(value)
+    fun remove(key: Any): Boolean {
+        val index = find(key)
         if (index >= 0) {
             if (index < size - 1) {
+                keys.copyInto(
+                    destination = keys,
+                    destinationOffset = index,
+                    startIndex = index + 1,
+                    endIndex = size
+                )
                 values.copyInto(
                     destination = values,
                     destinationOffset = index,
@@ -134,7 +116,7 @@ internal class IdentityArraySet<T : Any> {
                 )
             }
             size--
-            values[size] = null
+            keys[size] = null
             return true
         }
         return false
@@ -143,42 +125,51 @@ internal class IdentityArraySet<T : Any> {
     /**
      * Removes all values that match [predicate].
      */
-    inline fun removeValueIf(predicate: (T) -> Boolean) {
+    inline fun removeValueIf(predicate: (Any, Int) -> Boolean) {
         var destinationIndex = 0
         for (i in 0 until size) {
             @Suppress("UNCHECKED_CAST")
-            val item = values[i] as T
-            if (!predicate(item)) {
+            val key = keys[i] as Any
+            val value = values[i]
+            if (!predicate(key, value)) {
                 if (destinationIndex != i) {
-                    values[destinationIndex] = item
+                    keys[destinationIndex] = key
+                    values[destinationIndex] = value
                 }
                 destinationIndex++
             }
         }
         for (i in destinationIndex until size) {
-            values[i] = null
+            keys[i] = null
         }
         size = destinationIndex
     }
 
+    inline fun any(predicate: (Any, Int) -> Boolean): Boolean {
+        for (i in 0 until size) {
+            if (predicate(keys[i] as Any, values[i])) return true
+        }
+        return false
+    }
+
     /**
-     * Returns the index of [value] in the set or the negative index - 1 of the location where
+     * Returns the index of [key] in the set or the negative index - 1 of the location where
      * it would have been if it had been in the set.
      */
-    private fun find(value: Any?): Int {
+    private fun find(key: Any?): Int {
         var low = 0
         var high = size - 1
-        val valueIdentity = identityHashCode(value)
+        val valueIdentity = identityHashCode(key)
 
         while (low <= high) {
             val mid = (low + high).ushr(1)
-            val midVal = get(mid)
+            val midVal = keys[mid]
             val comparison = identityHashCode(midVal) - valueIdentity
             when {
                 comparison < 0 -> low = mid + 1
                 comparison > 0 -> high = mid - 1
-                midVal === value -> return mid
-                else -> return findExactIndex(mid, value, valueIdentity)
+                midVal === key -> return mid
+                else -> return findExactIndex(mid, key, valueIdentity)
             }
         }
         return -(low + 1)
@@ -194,7 +185,7 @@ internal class IdentityArraySet<T : Any> {
     private fun findExactIndex(midIndex: Int, value: Any?, valueHash: Int): Int {
         // hunt down first
         for (i in midIndex - 1 downTo 0) {
-            val v = values[i]
+            val v = keys[i]
             if (v === value) {
                 return i
             }
@@ -204,7 +195,7 @@ internal class IdentityArraySet<T : Any> {
         }
 
         for (i in midIndex + 1 until size) {
-            val v = values[i]
+            val v = keys[i]
             if (v === value) {
                 return i
             }
