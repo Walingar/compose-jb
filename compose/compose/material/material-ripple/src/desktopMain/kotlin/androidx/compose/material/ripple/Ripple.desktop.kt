@@ -1,3 +1,4 @@
+// ktlint-disable filename
 /*
  * Copyright 2021 The Android Open Source Project
  *
@@ -14,8 +15,9 @@
  * limitations under the License.
  */
 
-package androidx.compose.material.catalog
+package androidx.compose.material.ripple
 
-import androidx.compose.integration.demos.common.ActivityDemo
-
-val MaterialCatalog = ActivityDemo("Material catalog", CatalogActivity::class)
+/**
+ * Desktop ripple implementation using the Compose-rendered [CommonRipple] implementation.
+ */
+internal actual typealias PlatformRipple = CommonRipple
