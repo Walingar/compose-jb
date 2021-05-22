@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,17 @@
 
 package androidx.compose.ui.graphics
 
-fun TileMode.toAndroidTileMode(): android.graphics.Shader.TileMode = when (this) {
-    TileMode.Clamp -> android.graphics.Shader.TileMode.CLAMP
-    TileMode.Repeated -> android.graphics.Shader.TileMode.REPEAT
-    TileMode.Mirror -> android.graphics.Shader.TileMode.MIRROR
-    // Always fallback to TileMode.Clamp
-    else -> android.graphics.Shader.TileMode.CLAMP
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
+
+@RunWith(JUnit4::class)
+class PathFillTypeTest {
+
+    @Test
+    fun testToString() {
+        assertEquals("EvenOdd", PathFillType.EvenOdd.toString())
+        assertEquals("NonZero", PathFillType.NonZero.toString())
+    }
 }
