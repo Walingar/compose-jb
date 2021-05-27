@@ -16,5 +16,4 @@
 
 package androidx.compose.foundation.text
 
-internal actual fun StringBuilder.appendCodePointX(codePoint: Int): StringBuilder =
-    this.appendCodePoint(codePoint)
+internal actual fun timeNowMillis(): Long = System.currentTimeMillis()

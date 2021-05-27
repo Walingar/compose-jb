@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package androidx.compose.foundation.text
+package androidx.compose.foundation
 
-internal actual fun StringBuilder.appendCodePointX(codePoint: Int): StringBuilder =
-    this.appendCodePoint(codePoint)
+import android.view.ViewConfiguration
+
+internal actual val TapIndicationDelay: Long = ViewConfiguration.getTapTimeout().toLong()

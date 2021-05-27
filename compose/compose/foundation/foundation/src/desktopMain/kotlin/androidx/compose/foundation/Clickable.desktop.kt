@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package androidx.compose.foundation.text
+package androidx.compose.foundation
 
-internal actual fun StringBuilder.appendCodePointX(codePoint: Int): StringBuilder =
-    this.appendCodePoint(codePoint)
+// TODO: b/168524931 - should this depend on the input device?
+internal actual val TapIndicationDelay: Long = 0L
