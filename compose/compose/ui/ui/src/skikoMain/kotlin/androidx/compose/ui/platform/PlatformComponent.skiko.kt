@@ -15,6 +15,8 @@
  */
 package androidx.compose.ui.platform
 
-internal expect interface PlatformComponent
+internal expect interface PlatformComponent : PlatformInputComponent, PlatformComponentWithCursor
+
+internal expect interface PlatformComponentWithCursor
 
 internal expect object DummyPlatformComponent : PlatformComponent
