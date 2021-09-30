@@ -48,7 +48,7 @@ actual data class PointerEvent internal constructor(
     actual var type: PointerEventType = PointerEventType.Unknown
         internal set
 
-    actual val buttons: PointerButtons = PointerButtons(mouseEvent?.buttonMask ?: 0)
+    actual val buttons: PointerButtons = PointerButtons(mouseEvent?.buttons?.value ?: 0)
 
     actual val keyboardModifiers: PointerKeyboardModifiers
         get() = TODO("implement native pointer event")

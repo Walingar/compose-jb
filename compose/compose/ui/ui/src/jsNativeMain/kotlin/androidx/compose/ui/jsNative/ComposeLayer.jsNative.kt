@@ -24,15 +24,15 @@ import androidx.compose.ui.input.pointer.toCompose
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.platform.PlatformComponent
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.getTimeMilliseconds
+import kotlinx.coroutines.CoroutineDispatcher
 import org.jetbrains.skia.Canvas
-import org.jetbrains.skiko.SkikoDispatchers
 import org.jetbrains.skiko.SkiaLayer
 import org.jetbrains.skiko.SkikoView
 import org.jetbrains.skiko.SkikoInputEvent
 import org.jetbrains.skiko.SkikoKeyboardEvent
 import org.jetbrains.skiko.SkikoPointerEvent
 import org.jetbrains.skiko.SkikoPointerEventKind
-import kotlin.system.getTimeMillis
 
 internal class ComposeLayer {
     private var isDisposed = false
@@ -44,8 +44,6 @@ internal class ComposeLayer {
             val contentScale = layer.contentScale
             canvas.scale(contentScale, contentScale)
             scene.render(canvas/*, (width / contentScale).toInt(), (height / contentScale).toInt()*/, nanoTime)
-            // Request next frame immediately.
-            layer.needRedraw()
         }
 
         override fun onInputEvent(event: SkikoInputEvent) {
@@ -61,7 +59,7 @@ internal class ComposeLayer {
                 eventType = event.kind.toCompose(),
                 // TODO: account for the proper density.
                 position = Offset(event.x.toFloat(), event.y.toFloat()), // * density,
-                timeMillis = getTimeMillis(),
+                timeMillis = getTimeMilliseconds(),
                 type = PointerType.Mouse,
                 nativeEvent = event
             )
@@ -75,7 +73,7 @@ internal class ComposeLayer {
     }
 
     private val scene = ComposeScene(
-        SkikoDispatchers.Main,
+        getMainDispatcher(),
         view,
         Density(1f),
         layer::needRedraw
@@ -117,3 +115,6 @@ internal class ComposeLayer {
         // }
     }
 }
+
+internal expect fun getMainDispatcher(): CoroutineDispatcher
+
