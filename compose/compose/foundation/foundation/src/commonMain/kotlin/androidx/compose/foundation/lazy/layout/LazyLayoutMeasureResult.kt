@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-package androidx.compose.foundation
+package androidx.compose.foundation.lazy.layout
 
-@RequiresOptIn("This API is experimental and is likely to change in the future.")
-annotation class ExperimentalDesktopApi
+import androidx.compose.ui.layout.MeasureResult
+
+internal interface LazyLayoutMeasureResult : MeasureResult, LazyLayoutInfo {
+    /**
+     * The list of [LazyLayoutItemInfo] representing all the currently visible items.
+     */
+    override val visibleItemsInfo: List<LazyLayoutItemInfo>
+}
