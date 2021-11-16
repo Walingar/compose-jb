@@ -30,14 +30,11 @@ package androidx.compose.foundation {
 
   public final class CanvasKt {
     method @androidx.compose.runtime.Composable public static void Canvas(androidx.compose.ui.Modifier modifier, kotlin.jvm.functions.Function1<? super androidx.compose.ui.graphics.drawscope.DrawScope,kotlin.Unit> onDraw);
-    method @androidx.compose.foundation.ExperimentalFoundationApi @androidx.compose.runtime.Composable public static void Canvas(androidx.compose.ui.Modifier modifier, String contentDescription, kotlin.jvm.functions.Function1<? super androidx.compose.ui.graphics.drawscope.DrawScope,kotlin.Unit> onDraw);
   }
 
   public final class ClickableKt {
     method public static androidx.compose.ui.Modifier clickable(androidx.compose.ui.Modifier, optional boolean enabled, optional String? onClickLabel, optional androidx.compose.ui.semantics.Role? role, kotlin.jvm.functions.Function0<kotlin.Unit> onClick);
     method public static androidx.compose.ui.Modifier clickable(androidx.compose.ui.Modifier, androidx.compose.foundation.interaction.MutableInteractionSource interactionSource, androidx.compose.foundation.Indication? indication, optional boolean enabled, optional String? onClickLabel, optional androidx.compose.ui.semantics.Role? role, kotlin.jvm.functions.Function0<kotlin.Unit> onClick);
-    method @androidx.compose.foundation.ExperimentalFoundationApi public static androidx.compose.ui.Modifier combinedClickable(androidx.compose.ui.Modifier, optional boolean enabled, optional String? onClickLabel, optional androidx.compose.ui.semantics.Role? role, optional String? onLongClickLabel, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onLongClick, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onDoubleClick, kotlin.jvm.functions.Function0<kotlin.Unit> onClick);
-    method @androidx.compose.foundation.ExperimentalFoundationApi public static androidx.compose.ui.Modifier combinedClickable(androidx.compose.ui.Modifier, androidx.compose.foundation.interaction.MutableInteractionSource interactionSource, androidx.compose.foundation.Indication? indication, optional boolean enabled, optional String? onClickLabel, optional androidx.compose.ui.semantics.Role? role, optional String? onLongClickLabel, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onLongClick, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onDoubleClick, kotlin.jvm.functions.Function0<kotlin.Unit> onClick);
   }
 
   public final class Clickable_androidKt {
@@ -48,9 +45,6 @@ package androidx.compose.foundation {
   }
 
   public final class DarkTheme_androidKt {
-  }
-
-  @kotlin.RequiresOptIn(message="This foundation API is experimental and is likely to change or be removed in the " + "future.") public @interface ExperimentalFoundationApi {
   }
 
   public final class FocusableKt {
@@ -65,6 +59,7 @@ package androidx.compose.foundation {
     method @androidx.compose.runtime.Composable public static void Image(androidx.compose.ui.graphics.ImageBitmap bitmap, String? contentDescription, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.ui.Alignment alignment, optional androidx.compose.ui.layout.ContentScale contentScale, optional float alpha, optional androidx.compose.ui.graphics.ColorFilter? colorFilter, optional int filterQuality);
     method @androidx.compose.runtime.Composable public static void Image(androidx.compose.ui.graphics.vector.ImageVector imageVector, String? contentDescription, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.ui.Alignment alignment, optional androidx.compose.ui.layout.ContentScale contentScale, optional float alpha, optional androidx.compose.ui.graphics.ColorFilter? colorFilter);
     method @androidx.compose.runtime.Composable public static void Image(androidx.compose.ui.graphics.painter.Painter painter, String? contentDescription, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.ui.Alignment alignment, optional androidx.compose.ui.layout.ContentScale contentScale, optional float alpha, optional androidx.compose.ui.graphics.ColorFilter? colorFilter);
+    method @Deprecated @androidx.compose.runtime.Composable public static void Image(androidx.compose.ui.graphics.ImageBitmap bitmap, String contentDescription, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.ui.Alignment alignment, optional androidx.compose.ui.layout.ContentScale contentScale, optional float alpha, optional androidx.compose.ui.graphics.ColorFilter? colorFilter);
   }
 
   @androidx.compose.runtime.Stable public interface Indication {
@@ -78,9 +73,10 @@ package androidx.compose.foundation {
   public final class IndicationKt {
     method public static androidx.compose.runtime.ProvidableCompositionLocal<androidx.compose.foundation.Indication> getLocalIndication();
     method public static androidx.compose.ui.Modifier indication(androidx.compose.ui.Modifier, androidx.compose.foundation.interaction.InteractionSource interactionSource, androidx.compose.foundation.Indication? indication);
+    property public static final androidx.compose.runtime.ProvidableCompositionLocal<androidx.compose.foundation.Indication> LocalIndication;
   }
 
-  @kotlin.RequiresOptIn(message="This API is internal to library.") @kotlin.annotation.Target(allowedTargets={kotlin.annotation.AnnotationTarget, kotlin.annotation.AnnotationTarget, kotlin.annotation.AnnotationTarget, kotlin.annotation.AnnotationTarget, kotlin.annotation.AnnotationTarget}) public @interface InternalFoundationApi {
+  public final class MagnifierKt {
   }
 
   public enum MutatePriority {
@@ -189,18 +185,7 @@ package androidx.compose.foundation.gestures {
     enum_constant public static final androidx.compose.foundation.gestures.Orientation Vertical;
   }
 
-  @androidx.compose.foundation.ExperimentalFoundationApi @androidx.compose.runtime.Stable public final class OverScrollConfiguration {
-    ctor public OverScrollConfiguration(optional long glowColor, optional boolean forceShowAlways, optional androidx.compose.foundation.layout.PaddingValues drawPadding);
-    method public androidx.compose.foundation.layout.PaddingValues getDrawPadding();
-    method public boolean getForceShowAlways();
-    method public long getGlowColor();
-    property public final androidx.compose.foundation.layout.PaddingValues drawPadding;
-    property public final boolean forceShowAlways;
-    property public final long glowColor;
-  }
-
   public final class OverScrollConfigurationKt {
-    method @androidx.compose.foundation.ExperimentalFoundationApi public static androidx.compose.runtime.ProvidableCompositionLocal<androidx.compose.foundation.gestures.OverScrollConfiguration> getLocalOverScrollConfiguration();
   }
 
   public interface PressGestureScope extends androidx.compose.ui.unit.Density {
@@ -387,21 +372,6 @@ package androidx.compose.foundation.interaction {
 
 package androidx.compose.foundation.lazy {
 
-  @androidx.compose.foundation.ExperimentalFoundationApi public abstract sealed class GridCells {
-  }
-
-  @androidx.compose.foundation.ExperimentalFoundationApi public static final class GridCells.Adaptive extends androidx.compose.foundation.lazy.GridCells {
-    ctor public GridCells.Adaptive(float minSize);
-    method public float getMinSize();
-    property public final float minSize;
-  }
-
-  @androidx.compose.foundation.ExperimentalFoundationApi public static final class GridCells.Fixed extends androidx.compose.foundation.lazy.GridCells {
-    ctor public GridCells.Fixed(int count);
-    method public int getCount();
-    property public final int count;
-  }
-
   public final class IntervalListKt {
   }
 
@@ -415,16 +385,9 @@ package androidx.compose.foundation.lazy {
   }
 
   public final class LazyGridKt {
-    method @androidx.compose.foundation.ExperimentalFoundationApi @androidx.compose.runtime.Composable public static void LazyVerticalGrid(androidx.compose.foundation.lazy.GridCells cells, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.foundation.lazy.LazyListState state, optional androidx.compose.foundation.layout.PaddingValues contentPadding, optional androidx.compose.foundation.layout.Arrangement.Vertical verticalArrangement, optional androidx.compose.foundation.layout.Arrangement.Horizontal horizontalArrangement, kotlin.jvm.functions.Function1<? super androidx.compose.foundation.lazy.LazyGridScope,kotlin.Unit> content);
-    method @androidx.compose.foundation.ExperimentalFoundationApi public static inline <T> void items(androidx.compose.foundation.lazy.LazyGridScope, java.util.List<? extends T> items, kotlin.jvm.functions.Function2<? super androidx.compose.foundation.lazy.LazyItemScope,? super T,kotlin.Unit> itemContent);
-    method @androidx.compose.foundation.ExperimentalFoundationApi public static inline <T> void items(androidx.compose.foundation.lazy.LazyGridScope, T![] items, kotlin.jvm.functions.Function2<? super androidx.compose.foundation.lazy.LazyItemScope,? super T,kotlin.Unit> itemContent);
-    method @androidx.compose.foundation.ExperimentalFoundationApi public static inline <T> void itemsIndexed(androidx.compose.foundation.lazy.LazyGridScope, java.util.List<? extends T> items, kotlin.jvm.functions.Function3<? super androidx.compose.foundation.lazy.LazyItemScope,? super java.lang.Integer,? super T,kotlin.Unit> itemContent);
-    method @androidx.compose.foundation.ExperimentalFoundationApi public static inline <T> void itemsIndexed(androidx.compose.foundation.lazy.LazyGridScope, T![] items, kotlin.jvm.functions.Function3<? super androidx.compose.foundation.lazy.LazyItemScope,? super java.lang.Integer,? super T,kotlin.Unit> itemContent);
   }
 
-  @androidx.compose.foundation.ExperimentalFoundationApi public interface LazyGridScope {
-    method public void item(kotlin.jvm.functions.Function1<? super androidx.compose.foundation.lazy.LazyItemScope,kotlin.Unit> content);
-    method public void items(int count, kotlin.jvm.functions.Function2<? super androidx.compose.foundation.lazy.LazyItemScope,? super java.lang.Integer,kotlin.Unit> itemContent);
+  public final class LazyGridSpanKt {
   }
 
   @androidx.compose.foundation.lazy.LazyScopeMarker @androidx.compose.runtime.Stable public interface LazyItemScope {
@@ -445,6 +408,9 @@ package androidx.compose.foundation.lazy {
     property public abstract Object key;
     property public abstract int offset;
     property public abstract int size;
+  }
+
+  public final class LazyListItemPlacementAnimatorKt {
   }
 
   public final class LazyListItemsProviderImplKt {
@@ -470,7 +436,6 @@ package androidx.compose.foundation.lazy {
   @androidx.compose.foundation.lazy.LazyScopeMarker public interface LazyListScope {
     method public void item(optional Object? key, kotlin.jvm.functions.Function1<? super androidx.compose.foundation.lazy.LazyItemScope,kotlin.Unit> content);
     method public void items(int count, optional kotlin.jvm.functions.Function1<? super java.lang.Integer,?>? key, kotlin.jvm.functions.Function2<? super androidx.compose.foundation.lazy.LazyItemScope,? super java.lang.Integer,kotlin.Unit> itemContent);
-    method @androidx.compose.foundation.ExperimentalFoundationApi public void stickyHeader(optional Object? key, kotlin.jvm.functions.Function1<? super androidx.compose.foundation.lazy.LazyItemScope,kotlin.Unit> content);
   }
 
   public final class LazyListScrollingKt {
@@ -536,26 +501,7 @@ package androidx.compose.foundation.lazy.layout {
 
 package androidx.compose.foundation.relocation {
 
-  @androidx.compose.foundation.ExperimentalFoundationApi public sealed interface BringIntoViewRequester {
-    method public suspend Object? bringIntoView(optional androidx.compose.ui.geometry.Rect? rect, optional kotlin.coroutines.Continuation<? super kotlin.Unit> p);
-  }
-
   public final class BringIntoViewRequesterKt {
-    method @androidx.compose.foundation.ExperimentalFoundationApi public static androidx.compose.foundation.relocation.BringIntoViewRequester BringIntoViewRequester();
-    method @androidx.compose.foundation.ExperimentalFoundationApi public static androidx.compose.ui.Modifier bringIntoViewRequester(androidx.compose.ui.Modifier, androidx.compose.foundation.relocation.BringIntoViewRequester bringIntoViewRequester);
-  }
-
-  @androidx.compose.foundation.ExperimentalFoundationApi public interface BringIntoViewResponder {
-    method public suspend Object? bringIntoView(androidx.compose.ui.geometry.Rect rect, kotlin.coroutines.Continuation<? super kotlin.Unit> p);
-    method public androidx.compose.ui.geometry.Rect toLocalRect(androidx.compose.ui.geometry.Rect rect, androidx.compose.ui.layout.LayoutCoordinates layoutCoordinates);
-    field public static final androidx.compose.foundation.relocation.BringIntoViewResponder.Companion Companion;
-  }
-
-  @androidx.compose.foundation.ExperimentalFoundationApi public static final class BringIntoViewResponder.Companion {
-    method public androidx.compose.ui.modifier.ProvidableModifierLocal<androidx.compose.foundation.relocation.BringIntoViewResponder> getModifierLocalBringIntoViewResponder();
-    method public androidx.compose.foundation.relocation.BringIntoViewResponder getRootBringIntoViewResponder();
-    property public final androidx.compose.ui.modifier.ProvidableModifierLocal<androidx.compose.foundation.relocation.BringIntoViewResponder> ModifierLocalBringIntoViewResponder;
-    property public final androidx.compose.foundation.relocation.BringIntoViewResponder RootBringIntoViewResponder;
   }
 
   public final class BringRectangleOnScreen_androidKt {
@@ -642,6 +588,7 @@ package androidx.compose.foundation.shape {
     method @androidx.compose.runtime.Stable public static androidx.compose.foundation.shape.CornerSize CornerSize(float size);
     method @androidx.compose.runtime.Stable public static androidx.compose.foundation.shape.CornerSize CornerSize(int percent);
     method public static androidx.compose.foundation.shape.CornerSize getZeroCornerSize();
+    property public static final androidx.compose.foundation.shape.CornerSize ZeroCornerSize;
   }
 
   public final class CutCornerShape extends androidx.compose.foundation.shape.CornerBasedShape {
@@ -680,6 +627,7 @@ package androidx.compose.foundation.shape {
     method public static androidx.compose.foundation.shape.RoundedCornerShape RoundedCornerShape(optional float topStart, optional float topEnd, optional float bottomEnd, optional float bottomStart);
     method public static androidx.compose.foundation.shape.RoundedCornerShape RoundedCornerShape(optional int topStartPercent, optional int topEndPercent, optional int bottomEndPercent, optional int bottomStartPercent);
     method public static androidx.compose.foundation.shape.RoundedCornerShape getCircleShape();
+    property public static final androidx.compose.foundation.shape.RoundedCornerShape CircleShape;
   }
 
 }
@@ -719,9 +667,6 @@ package androidx.compose.foundation.text {
 
   public final class InlineTextContentKt {
     method public static void appendInlineContent(androidx.compose.ui.text.AnnotatedString.Builder, String id, optional String alternateText);
-  }
-
-  @kotlin.RequiresOptIn(message="Internal/Unstable API for use only between foundation modules sharing " + "the same exact version, subject to change without notice.") @kotlin.annotation.Target(allowedTargets={kotlin.annotation.AnnotationTarget, kotlin.annotation.AnnotationTarget, kotlin.annotation.AnnotationTarget, kotlin.annotation.AnnotationTarget, kotlin.annotation.AnnotationTarget}) public @interface InternalFoundationTextApi {
   }
 
   public final class KeyEventHelpers_androidKt {
@@ -827,6 +772,9 @@ package androidx.compose.foundation.text {
   public final class TextLayoutResultProxyKt {
   }
 
+  public final class TextPointerIcon_androidKt {
+  }
+
   public final class TouchMode_androidKt {
   }
 
@@ -888,6 +836,7 @@ package androidx.compose.foundation.text.selection {
 
   public final class TextSelectionColorsKt {
     method public static androidx.compose.runtime.ProvidableCompositionLocal<androidx.compose.foundation.text.selection.TextSelectionColors> getLocalTextSelectionColors();
+    property public static final androidx.compose.runtime.ProvidableCompositionLocal<androidx.compose.foundation.text.selection.TextSelectionColors> LocalTextSelectionColors;
   }
 
   public final class TextSelectionDelegateKt {
