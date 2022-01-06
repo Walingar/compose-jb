@@ -16,8 +16,18 @@
 
 package androidx.compose.foundation.text
 
+import androidx.compose.foundation.text.selection.SelectionManager
 import androidx.compose.foundation.text.selection.TextFieldSelectionManager
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.Composable
 
-internal actual fun Modifier.textFieldMagnifier(manager: TextFieldSelectionManager): Modifier =
-    Modifier
+@Composable
+internal expect fun ContextMenuArea(
+    manager: TextFieldSelectionManager,
+    content: @Composable () -> Unit
+)
+
+@Composable
+internal expect fun ContextMenuArea(
+    manager: SelectionManager,
+    content: @Composable () -> Unit
+)
