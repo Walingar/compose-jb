@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-import androidx.build.LibraryGroups
-import androidx.build.LibraryType
+package androidx.compose.ui.platform
 
-plugins {
-    id("AndroidXPlugin")
-    id("com.android.library")
-    id("AndroidXComposePlugin")
+import androidx.compose.runtime.staticCompositionLocalOf
+
+interface PlatformLocalization {
+    val copy: String
+    val cut: String
+    val paste: String
+    val selectAll: String
 }
 
-dependencies {
-    api("androidx.activity:activity:1.2.0")
+internal val defaultPlatformLocalization = object : PlatformLocalization {
+    override val copy = "Copy"
+    override val cut = "Cut"
+    override val paste = "Paste"
+    override val selectAll = "Select All"
 }
 
-androidx {
-    name = "Compose Testing manifest dependency"
-    type = LibraryType.PUBLISHED_TEST_LIBRARY
-    mavenGroup = LibraryGroups.Compose.UI
-    inceptionYear = "2021"
-    description = "Compose testing library that should be added as a debugImplementation dependency to add properties to the debug manifest necessary for testing an application"
+val LocalLocalization = staticCompositionLocalOf {
+    defaultPlatformLocalization
 }
