@@ -33,11 +33,10 @@ import androidx.compose.runtime.snapshotFlow
 
 @ExperimentalFoundationApi
 @Composable
-internal fun rememberItemsProvider(
+internal fun rememberItemProvider(
     state: LazyGridState,
     content: LazyGridScope.() -> Unit,
-    itemScope: LazyGridItemScope
-): LazyGridItemsProvider {
+): LazyGridItemProvider {
     val latestContent = rememberUpdatedState(content)
     val nearestItemsRangeState = remember(state) {
         mutableStateOf(
@@ -51,11 +50,10 @@ internal fun rememberItemsProvider(
             .collect { nearestItemsRangeState.value = it }
     }
     return remember(nearestItemsRangeState) {
-        LazyGridItemsProviderImpl(
+        LazyGridItemProviderImpl(
             derivedStateOf {
                 val listScope = LazyGridScopeImpl().apply(latestContent.value)
                 LazyGridItemsSnapshot(
-                    itemScope,
                     listScope.intervals,
                     listScope.hasCustomSpans,
                     nearestItemsRangeState.value
@@ -67,7 +65,6 @@ internal fun rememberItemsProvider(
 
 @ExperimentalFoundationApi
 internal class LazyGridItemsSnapshot(
-    private val itemScope: LazyGridItemScope,
     private val intervals: IntervalList<LazyGridIntervalContent>,
     val hasCustomSpans: Boolean,
     nearestItemsRange: IntRange
@@ -93,10 +90,11 @@ internal class LazyGridItemsSnapshot(
         return interval.content.span.invoke(this, localIntervalIndex)
     }
 
-    fun getContent(index: Int): @Composable () -> Unit {
+    @Composable
+    fun Item(index: Int) {
         val interval = getIntervalForIndex(index)
         val localIntervalIndex = index - interval.startIndex
-        return interval.content.content.invoke(itemScope, localIntervalIndex)
+        interval.content.item.invoke(LazyGridItemScopeImpl, localIntervalIndex)
     }
 
     val keyToIndexMap: Map<Any, Int> = generateKeyToIndexMap(nearestItemsRange, intervals)
@@ -117,11 +115,11 @@ internal class LazyGridItemsSnapshot(
 }
 
 @ExperimentalFoundationApi
-internal class LazyGridItemsProviderImpl(
+internal class LazyGridItemProviderImpl(
     private val itemsSnapshot: State<LazyGridItemsSnapshot>
-) : LazyGridItemsProvider {
+) : LazyGridItemProvider {
 
-    override val itemsCount get() = itemsSnapshot.value.itemsCount
+    override val itemCount get() = itemsSnapshot.value.itemsCount
 
     override fun getKey(index: Int) = itemsSnapshot.value.getKey(index)
 
@@ -130,7 +128,10 @@ internal class LazyGridItemsProviderImpl(
 
     override val hasCustomSpans: Boolean get() = itemsSnapshot.value.hasCustomSpans
 
-    override fun getContent(index: Int) = itemsSnapshot.value.getContent(index)
+    @Composable
+    override fun Item(index: Int) {
+        itemsSnapshot.value.Item(index)
+    }
 
     override val keyToIndexMap: Map<Any, Int> get() = itemsSnapshot.value.keyToIndexMap
 

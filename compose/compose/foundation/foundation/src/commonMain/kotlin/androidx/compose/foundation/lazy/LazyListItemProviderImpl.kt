@@ -30,15 +30,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.node.Ref
 
 @ExperimentalFoundationApi
 @Composable
-internal fun rememberItemsProvider(
+internal fun rememberItemProvider(
     state: LazyListState,
-    content: LazyListScope.() -> Unit,
-    itemScope: Ref<LazyItemScopeImpl>
-): LazyListItemsProvider {
+    content: LazyListScope.() -> Unit
+): LazyListItemProvider {
     val latestContent = rememberUpdatedState(content)
     val nearestItemsRangeState = remember(state) {
         mutableStateOf(
@@ -52,11 +50,10 @@ internal fun rememberItemsProvider(
             .collect { nearestItemsRangeState.value = it }
     }
     return remember(nearestItemsRangeState) {
-        LazyListItemsProviderImpl(
+        LazyListItemProviderImpl(
             derivedStateOf {
                 val listScope = LazyListScopeImpl().apply(latestContent.value)
                 LazyListItemsSnapshot(
-                    itemScope,
                     listScope.intervals,
                     listScope.headerIndexes,
                     nearestItemsRangeState.value
@@ -68,7 +65,6 @@ internal fun rememberItemsProvider(
 
 @ExperimentalFoundationApi
 internal class LazyListItemsSnapshot(
-    private val itemScope: Ref<LazyItemScopeImpl>,
     private val list: IntervalList<LazyListIntervalContent>,
     val headerIndexes: List<Int>,
     nearestItemsRange: IntRange
@@ -96,10 +92,11 @@ internal class LazyListItemsSnapshot(
         return key ?: getDefaultLazyLayoutKey(index)
     }
 
-    fun getContent(index: Int): @Composable () -> Unit {
+    @Composable
+    fun Item(scope: LazyItemScope, index: Int) {
         val interval = getIntervalForIndex(index)
         val localIntervalIndex = index - interval.startIndex
-        return interval.content.content.invoke(itemScope.value!!, localIntervalIndex)
+        interval.content.item.invoke(scope, localIntervalIndex)
     }
 
     val keyToIndexMap: Map<Any, Int> = generateKeyToIndexMap(nearestItemsRange, list)
@@ -112,17 +109,22 @@ internal class LazyListItemsSnapshot(
 }
 
 @ExperimentalFoundationApi
-internal class LazyListItemsProviderImpl(
+internal class LazyListItemProviderImpl(
     private val itemsSnapshot: State<LazyListItemsSnapshot>
-) : LazyListItemsProvider {
+) : LazyListItemProvider {
+
+    override val itemScope = LazyItemScopeImpl()
 
     override val headerIndexes: List<Int> get() = itemsSnapshot.value.headerIndexes
 
-    override val itemsCount get() = itemsSnapshot.value.itemsCount
+    override val itemCount get() = itemsSnapshot.value.itemsCount
 
     override fun getKey(index: Int) = itemsSnapshot.value.getKey(index)
 
-    override fun getContent(index: Int) = itemsSnapshot.value.getContent(index)
+    @Composable
+    override fun Item(index: Int) {
+        itemsSnapshot.value.Item(itemScope, index)
+    }
 
     override val keyToIndexMap: Map<Any, Int> get() = itemsSnapshot.value.keyToIndexMap
 
