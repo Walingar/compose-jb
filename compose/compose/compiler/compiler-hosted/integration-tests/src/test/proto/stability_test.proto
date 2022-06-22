@@ -13,25 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+syntax = "proto3";
+package androidx.compose.compiler.plugins;
+option java_package = "androidx.compose.compiler.plugins";
+option java_outer_classname = "StabilityTestProtos";
 
-import androidx.build.LibraryType
-
-plugins {
-    id("AndroidXPlugin")
-    id("kotlin")
-}
-
-dependencies {
-    testImplementation(libs.junit)
-
-    testImplementation(libs.kotlinCompiler)
-    testImplementation(libs.kotlinStdlib)
-    testImplementation(project(":compose:compiler:compiler-daemon"))
-}
-
-androidx {
-    name = "AndroidX Compiler Daemon CLI Tests"
-    type = LibraryType.COMPILER_DAEMON_TEST
-    inceptionYear = "2021"
-    description = "Contains test for the compose compiler daemon"
+message SampleProto {
+  bool is_enabled = 1;
 }
