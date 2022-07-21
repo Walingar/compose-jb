@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Android Open Source Project
+ * Copyright 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,7 @@
  * limitations under the License.
  */
 
-@file:Suppress("NOTHING_TO_INLINE")
-package androidx.compose.runtime
+package androidx.compose.runtime.internal
 
-// NOTE: rotateRight, marked @ExperimentalStdlibApi is also marked inline-only,
-// which makes this usage stable.
-internal inline infix fun Int.ror(other: Int) = this.rotateRight(other)
-
-// NOTE: rotateLeft, marked @ExperimentalStdlibApi is also marked inline-only,
-// which makes this usage stable.
-internal inline infix fun Int.rol(other: Int) = this.rotateLeft(other)
+@Suppress("ACTUAL_WITHOUT_EXPECT") // https://youtrack.jetbrains.com/issue/KT-37316
+internal actual typealias JvmDefaultWithCompatibility = kotlin.jvm.JvmDefaultWithCompatibility
