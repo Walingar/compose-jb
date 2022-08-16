@@ -1,4 +1,20 @@
-package androidx.compose.ui.text.platform
+/*
+ * Copyright 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package androidx.compose.ui.text
 
 import android.graphics.Paint
 import android.graphics.Typeface
@@ -18,13 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.FontTestData.Companion.BASIC_MEASURE_FONT
-import androidx.compose.ui.text.PlatformTextStyle
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.UncachedFontFamilyResolver
 import androidx.compose.ui.text.android.InternalPlatformTextApi
 import androidx.compose.ui.text.android.TextLayout
 import androidx.compose.ui.text.android.style.BaselineShiftSpan
@@ -34,7 +44,6 @@ import androidx.compose.ui.text.android.style.LetterSpacingSpanPx
 import androidx.compose.ui.text.android.style.ShadowSpan
 import androidx.compose.ui.text.android.style.SkewXSpan
 import androidx.compose.ui.text.android.style.TextDecorationSpan
-import androidx.compose.ui.text.ceilToInt
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +52,7 @@ import androidx.compose.ui.text.font.testutils.BlockingFauxFont
 import androidx.compose.ui.text.font.toFontFamily
 import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.matchers.assertThat
+import androidx.compose.ui.text.platform.bitmap
 import androidx.compose.ui.text.platform.style.ShaderBrushSpan
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextAlign
@@ -768,6 +778,90 @@ AndroidParagraphTest {
     }
 
     @Test
+    fun testAnnotatedString_setShadow_withZeroBlur() {
+        val text = "abcde"
+        val spanStyle = SpanStyle(
+            shadow = Shadow(
+                color = Color(0xFF00FF00),
+                offset = Offset(1f, 2f),
+                blurRadius = 0f
+            )
+        )
+        val paragraph = simpleParagraph(
+            text = text,
+            spanStyles = listOf(
+                AnnotatedString.Range(spanStyle, start = 0, end = text.length)
+            ),
+            width = 100.0f // width is not important
+        )
+
+        assertThat(paragraph.charSequence)
+            .hasSpan(ShadowSpan::class, start = 0, end = text.length) {
+                return@hasSpan it.radius == Float.MIN_VALUE
+            }
+    }
+
+    @Test
+    fun testAnnotatedString_setShadow_withZeroBlur_bitmap() {
+        val text = "abcde"
+        val width = 100.0f // width is not important
+
+        val shadow = Shadow(
+            color = Color(0xFF00FF00),
+            offset = Offset(1f, 2f),
+            blurRadius = 0f
+        )
+
+        val textStyle = TextStyle(fontSize = 8.sp)
+
+        val paragraphNoShadow = simpleParagraph(
+            text = text,
+            style = textStyle,
+            spanStyles = listOf(),
+            width = width
+        )
+
+        val paragraphZeroBlur = simpleParagraph(
+            text = text,
+            style = textStyle,
+            spanStyles = listOf(
+                AnnotatedString.Range(SpanStyle(shadow = shadow), start = 0, end = text.length)
+            ),
+            width = width
+        )
+
+        val paragraphFloatMinBlur = simpleParagraph(
+            text = text,
+            style = textStyle,
+            spanStyles = listOf(
+                AnnotatedString.Range(
+                    SpanStyle(shadow = shadow.copy(blurRadius = Float.MIN_VALUE)),
+                    start = 0,
+                    end = text.length
+                )
+            ),
+            width = width
+        )
+
+        val paragraphOneBlur = simpleParagraph(
+            text = text,
+            style = textStyle,
+            spanStyles = listOf(
+                AnnotatedString.Range(
+                    SpanStyle(shadow = shadow.copy(blurRadius = 1f)),
+                    start = 0,
+                    end = text.length
+                )
+            ),
+            width = width
+        )
+
+        assertThat(paragraphZeroBlur.bitmap()).isNotEqualToBitmap(paragraphNoShadow.bitmap())
+        assertThat(paragraphZeroBlur.bitmap()).isEqualToBitmap(paragraphFloatMinBlur.bitmap())
+        assertThat(paragraphZeroBlur.bitmap()).isNotEqualToBitmap(paragraphOneBlur.bitmap())
+    }
+
+    @Test
     fun testAnnotatedString_setShadowTwice_lastOnTop() {
         val text = "abcde"
         val color = Color(0xFF00FF00)
@@ -1091,6 +1185,28 @@ AndroidParagraphTest {
     }
 
     @Test
+    fun testEllipsis_whenHeightAllowsForZeroLines_doesEllipsis() {
+        with(defaultDensity) {
+            val text = "This is a text"
+            val fontSize = 30.sp
+            val paragraph = simpleParagraph(
+                text = text,
+                ellipsis = true,
+                style = TextStyle(
+                    fontFamily = basicFontFamily,
+                    fontSize = fontSize
+                ),
+                width = 4 * fontSize.toPx(),
+                height = fontSize.toPx() / 4
+            )
+
+            assertThat(paragraph.didExceedMaxLines).isTrue()
+            assertThat(paragraph.lineCount).isEqualTo(1)
+            assertThat(paragraph.isEllipsisApplied(paragraph.lineCount - 1)).isTrue()
+        }
+    }
+
+    @Test
     fun testEllipsis_withSpans_withLimitedHeight_doesEllipsis() {
         with(defaultDensity) {
             val text = "This is a text"
@@ -1113,7 +1229,6 @@ AndroidParagraphTest {
             assertThat(paragraph.isEllipsisApplied(paragraph.lineCount - 1)).isTrue()
         }
     }
-
     @Test
     fun testSpanStyle_fontSize_appliedOnTextPaint() {
         with(defaultDensity) {
@@ -1399,6 +1514,75 @@ AndroidParagraphTest {
         assertThat(paragraph.textPaint.shadowLayerDy).isEqualTo(0f)
         assertThat(paragraph.textPaint.shadowLayerRadius).isEqualTo(0f)
         assertThat(paragraph.textPaint.shadowLayerColor).isEqualTo(0)
+    }
+
+    @SdkSuppress(minSdkVersion = 29)
+    @Test
+    fun testPaint_shadow_blur_with_zero_resets_to_float_min() {
+        val paragraph = simpleParagraph(
+            text = "",
+            style = TextStyle(shadow = null),
+            width = 0.0f
+        )
+
+        assertThat(paragraph.textPaint.shadowLayerRadius).isEqualTo(0f)
+
+        val canvas = Canvas(android.graphics.Canvas())
+        val color = Color.Red
+        val dx = 1f
+        val dy = 2f
+        val radius = 0f
+
+        paragraph.paint(
+            canvas,
+            shadow = Shadow(color = color, offset = Offset(dx, dy), blurRadius = radius)
+        )
+
+        assertThat(paragraph.textPaint.shadowLayerRadius).isEqualTo(Float.MIN_VALUE)
+    }
+
+    @Test
+    fun testPaint_shadow_blur_with_zero_resets_to_float_min_bitmap() {
+        val text = "a"
+        val width = 100f
+        val fontSize = 8.sp
+
+        val shadow = Shadow(
+            color = Color(0xFF00FF00),
+            offset = Offset(1f, 2f),
+            blurRadius = 0f
+        )
+
+        val paragraphNoShadow = simpleParagraph(
+            text = text,
+            style = TextStyle(fontSize = fontSize),
+            width = width
+        )
+
+        val paragraphZeroBlur = simpleParagraph(
+            text = text,
+            style = TextStyle(fontSize = fontSize, shadow = shadow),
+            width = width
+        )
+
+        val paragraphFloatMinBlur = simpleParagraph(
+            text = text,
+            style = TextStyle(
+                fontSize = fontSize,
+                shadow = shadow.copy(blurRadius = Float.MIN_VALUE)
+            ),
+            width = width
+        )
+
+        val paragraphOneBlur = simpleParagraph(
+            text = text,
+            style = TextStyle(fontSize = fontSize, shadow = shadow.copy(blurRadius = 1f)),
+            width = width
+        )
+
+        assertThat(paragraphZeroBlur.bitmap()).isNotEqualToBitmap(paragraphNoShadow.bitmap())
+        assertThat(paragraphZeroBlur.bitmap()).isEqualToBitmap(paragraphFloatMinBlur.bitmap())
+        assertThat(paragraphZeroBlur.bitmap()).isNotEqualToBitmap(paragraphOneBlur.bitmap())
     }
 
     @Test

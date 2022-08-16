@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Android Open Source Project
+ * Copyright 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package androidx.compose.ui.node
 
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Canvas
@@ -24,17 +25,24 @@ import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.layout.AlignmentLine
-import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.LookaheadScope
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 
-internal class InnerPlaceable(
+internal class InnerNodeCoordinator(
     layoutNode: LayoutNode
-) : LayoutNodeWrapper(layoutNode), Density by layoutNode.measureScope {
-
-    override val measureScope get() = layoutNode.measureScope
+) : NodeCoordinator(layoutNode) {
+    @OptIn(ExperimentalComposeUiApi::class)
+    override val tail: Modifier.Node = object : Modifier.Node() {
+        override fun toString(): String {
+            return "<tail>"
+        }
+    }
+    init {
+        @OptIn(ExperimentalComposeUiApi::class)
+        tail.updateCoordinator(this)
+    }
 
     private inner class LookaheadDelegateImpl(
         scope: LookaheadScope
@@ -48,7 +56,7 @@ internal class InnerPlaceable(
                     it.measuredByParentInLookahead = LayoutNode.UsageByParent.NotUsed
                 }
                 val measureResult = with(layoutNode.measurePolicy) {
-                    layoutNode.measureScope.measure(
+                    measure(
                         layoutNode.childLookaheadMeasurables,
                         constraints
                     )
@@ -92,7 +100,7 @@ internal class InnerPlaceable(
         }
 
         measureResult = with(layoutNode.measurePolicy) {
-            layoutNode.measureScope.measure(layoutNode.childMeasurables, constraints)
+            measure(layoutNode.childMeasurables, constraints)
         }
         onMeasured()
         return this
@@ -117,10 +125,10 @@ internal class InnerPlaceable(
     ) {
         super.placeAt(position, zIndex, layerBlock)
 
-        // The wrapper only runs their placement block to obtain our position, which allows them
+        // The coordinator only runs their placement block to obtain our position, which allows them
         // to calculate the offset of an alignment line we have already provided a position for.
         // No need to place our wrapped as well (we might have actually done this already in
-        // get(line), to obtain the position of the alignment line the wrapper currently needs
+        // get(line), to obtain the position of the alignment line the coordinator currently needs
         // our position in order ot know how to offset the value we provided).
         if (isShallowPlacing) return
 
@@ -148,10 +156,11 @@ internal class InnerPlaceable(
         }
     }
 
-    override fun <T : LayoutNodeEntity<T, M>, C, M : Modifier> hitTestChild(
-        hitTestSource: HitTestSource<T, C, M>,
+    @OptIn(ExperimentalComposeUiApi::class)
+    override fun <T : DelegatableNode> hitTestChild(
+        hitTestSource: HitTestSource<T>,
         pointerPosition: Offset,
-        hitTestResult: HitTestResult<C>,
+        hitTestResult: HitTestResult<T>,
         isTouchEvent: Boolean,
         isInLayer: Boolean
     ) {
@@ -187,7 +196,7 @@ internal class InnerPlaceable(
                         if (!wasHit) {
                             continueHitTest = true
                         } else if (
-                            child.outerLayoutNodeWrapper.shouldSharePointerInputWithSiblings()
+                            child.outerCoordinator.shouldSharePointerInputWithSiblings()
                         ) {
                             hitTestResult.acceptHits()
                             continueHitTest = true

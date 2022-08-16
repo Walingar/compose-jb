@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 The Android Open Source Project
+ * Copyright 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package androidx.compose.ui.text.platform
+package androidx.compose.ui.text
 
+import java.util.Locale as JavaLocale
+import android.text.Spannable
+import android.text.SpannableString
 import android.text.Spanned
 import android.text.TextUtils
 import androidx.annotation.VisibleForTesting
@@ -29,13 +32,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.Paragraph
-import androidx.compose.ui.text.ParagraphIntrinsics
-import androidx.compose.ui.text.Placeholder
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.android.InternalPlatformTextApi
 import androidx.compose.ui.text.android.LayoutCompat.ALIGN_CENTER
 import androidx.compose.ui.text.android.LayoutCompat.ALIGN_LEFT
@@ -48,19 +44,21 @@ import androidx.compose.ui.text.android.LayoutCompat.DEFAULT_LINESPACING_MULTIPL
 import androidx.compose.ui.text.android.LayoutCompat.JUSTIFICATION_MODE_INTER_WORD
 import androidx.compose.ui.text.android.TextLayout
 import androidx.compose.ui.text.android.selection.WordBoundary
+import androidx.compose.ui.text.android.style.IndentationFixSpan
 import androidx.compose.ui.text.android.style.PlaceholderSpan
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.createFontFamilyResolver
+import androidx.compose.ui.text.platform.AndroidParagraphIntrinsics
+import androidx.compose.ui.text.platform.AndroidTextPaint
+import androidx.compose.ui.text.platform.extensions.setSpan
+import androidx.compose.ui.text.platform.isIncludeFontPaddingEnabled
 import androidx.compose.ui.text.platform.style.ShaderBrushSpan
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.Density
-import java.util.Locale as JavaLocale
-import androidx.compose.ui.text.ExperimentalTextApi
-import androidx.compose.ui.text.ceilToInt
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 
 /**
  * Android specific implementation for [Paragraph]
@@ -76,7 +74,6 @@ internal class AndroidParagraph(
     val ellipsis: Boolean,
     val constraints: Constraints
 ) : Paragraph {
-
     constructor(
         text: String,
         style: TextStyle,
@@ -103,6 +100,8 @@ internal class AndroidParagraph(
 
     private val layout: TextLayout
 
+    @VisibleForTesting
+    internal val charSequence: CharSequence
     init {
         require(constraints.minHeight == 0 && constraints.minWidth == 0) {
             "Setting Constraints.minWidth and Constraints.minHeight is not supported, " +
@@ -111,6 +110,15 @@ internal class AndroidParagraph(
         require(maxLines >= 1) { "maxLines should be greater than 0" }
 
         val style = paragraphIntrinsics.style
+
+        charSequence = if (shouldAttachIndentationFixSpan(style, ellipsis)) {
+            // When letter spacing, align and ellipsize applied to text, the ellipsized line is
+            // indented wrong. This function adds the IndentationFixSpan in order to fix the issue
+            // with best effort. b/228463206
+            paragraphIntrinsics.charSequence.attachIndentationFixSpan()
+        } else {
+            paragraphIntrinsics.charSequence
+        }
 
         val alignment = toLayoutAlign(style.textAlign)
 
@@ -136,12 +144,16 @@ internal class AndroidParagraph(
         if (ellipsis && firstLayout.height > constraints.maxHeight && maxLines > 1) {
             val calculatedMaxLines =
                 firstLayout.numberOfLinesThatFitMaxHeight(constraints.maxHeight)
-            layout = if (calculatedMaxLines > 0 && calculatedMaxLines != maxLines) {
+            layout = if (calculatedMaxLines >= 0 && calculatedMaxLines != maxLines) {
                 constructTextLayout(
                     alignment = alignment,
                     justificationMode = justificationMode,
                     ellipsize = ellipsize,
-                    maxLines = calculatedMaxLines
+                    // When we can't fully fit even a single line, measure with one line anyway.
+                    // This will allow to have an ellipsis on that single line. If we measured with
+                    // 0 maxLines, it would measure all lines with no ellipsis even though the first
+                    // line might be partially visible
+                    maxLines = calculatedMaxLines.coerceAtLeast(1)
                 )
             } else {
                 firstLayout
@@ -174,11 +186,7 @@ internal class AndroidParagraph(
         get() = getLineBaseline(0)
 
     override val lastBaseline: Float
-        get() = if (maxLines < lineCount) {
-            getLineBaseline(maxLines - 1)
-        } else {
-            getLineBaseline(lineCount - 1)
-        }
+        get() = getLineBaseline(lineCount - 1)
 
     override val didExceedMaxLines: Boolean
         get() = layout.didExceedMaxLines
@@ -187,11 +195,15 @@ internal class AndroidParagraph(
     internal val textLocale: JavaLocale
         get() = paragraphIntrinsics.textPaint.textLocale
 
+    /**
+     * Resolved line count. If maxLines smaller than the real number of lines in the text, this
+     * property will return the minimum between the two
+     */
     override val lineCount: Int
         get() = layout.lineCount
 
     override val placeholderRects: List<Rect?> =
-        with(paragraphIntrinsics.charSequence) {
+        with(charSequence) {
             if (this !is Spanned) return@with listOf()
             getSpans(0, length, PlaceholderSpan::class.java).map { span ->
                 val start = getSpanStart(span)
@@ -199,11 +211,12 @@ internal class AndroidParagraph(
                 // The line index of the PlaceholderSpan. In the case where PlaceholderSpan is
                 // truncated due to maxLines limitation. It will return the index of last line.
                 val line = layout.getLineForOffset(start)
+                val exceedsMaxLines = line >= maxLines
                 val isPlaceholderSpanEllipsized = layout.getLineEllipsisCount(line) > 0 &&
                     end > layout.getLineEllipsisOffset(line)
                 val isPlaceholderSpanTruncated = end > layout.getLineEnd(line)
                 // This Placeholder is ellipsized or truncated, return null instead.
-                if (isPlaceholderSpanEllipsized || isPlaceholderSpanTruncated) {
+                if (isPlaceholderSpanEllipsized || isPlaceholderSpanTruncated || exceedsMaxLines) {
                     return@map null
                 }
 
@@ -244,10 +257,6 @@ internal class AndroidParagraph(
         }
 
     @VisibleForTesting
-    internal val charSequence: CharSequence
-        get() = paragraphIntrinsics.charSequence
-
-    @VisibleForTesting
     internal val textPaint: AndroidTextPaint
         get() = paragraphIntrinsics.textPaint
 
@@ -264,16 +273,9 @@ internal class AndroidParagraph(
      * Returns the bounding box as Rect of the character for given character offset. Rect includes
      * the top, bottom, left and right of a character.
      */
-    // TODO:(qqd) Implement RTL case.
     override fun getBoundingBox(offset: Int): Rect {
-        val left = layout.getPrimaryHorizontal(offset)
-        val right = layout.getPrimaryHorizontal(offset + 1)
-
-        val line = layout.getLineForOffset(offset)
-        val top = layout.getLineTop(line)
-        val bottom = layout.getLineBottom(line)
-
-        return Rect(top = top, bottom = bottom, left = left, right = right)
+        val rectF = layout.getBoundingBox(offset)
+        return with(rectF) { Rect(left = left, top = top, right = right, bottom = bottom) }
     }
 
     /**
@@ -468,7 +470,7 @@ internal class AndroidParagraph(
         maxLines: Int
     ) =
         TextLayout(
-            charSequence = paragraphIntrinsics.charSequence,
+            charSequence = charSequence,
             width = width,
             textPaint = textPaint,
             ellipsize = ellipsize,
@@ -504,70 +506,15 @@ private fun TextLayout.numberOfLinesThatFitMaxHeight(maxHeight: Int): Int {
     return lineCount
 }
 
-@Suppress("DEPRECATION")
-@Deprecated(
-    "Font.ResourceLoader is deprecated, instead pass FontFamily.Resolver",
-    replaceWith = ReplaceWith(
-        "ActualParagraph(text, style, spanStyles, placeholders, " +
-            "maxLines, ellipsis, width, density, fontFamilyResolver)"
-    ),
-)
-internal actual fun ActualParagraph(
-    text: String,
-    style: TextStyle,
-    spanStyles: List<AnnotatedString.Range<SpanStyle>>,
-    placeholders: List<AnnotatedString.Range<Placeholder>>,
-    maxLines: Int,
-    ellipsis: Boolean,
-    width: Float,
-    density: Density,
-    @Suppress("DEPRECATION") resourceLoader: Font.ResourceLoader
-): Paragraph = AndroidParagraph(
-    AndroidParagraphIntrinsics(
-        text = text,
-        style = style,
-        placeholders = placeholders,
-        spanStyles = spanStyles,
-        fontFamilyResolver = createFontFamilyResolver(resourceLoader),
-        density = density
-    ),
-    maxLines,
-    ellipsis,
-    Constraints(maxWidth = width.ceilToInt())
-)
+private fun shouldAttachIndentationFixSpan(textStyle: TextStyle, ellipsis: Boolean) =
+    with(textStyle) {
+        ellipsis && (letterSpacing != 0.sp && letterSpacing != TextUnit.Unspecified) &&
+            (textAlign != null && textAlign != TextAlign.Start && textAlign != TextAlign.Justify)
+    }
 
-internal actual fun ActualParagraph(
-    text: String,
-    style: TextStyle,
-    spanStyles: List<AnnotatedString.Range<SpanStyle>>,
-    placeholders: List<AnnotatedString.Range<Placeholder>>,
-    maxLines: Int,
-    ellipsis: Boolean,
-    constraints: Constraints,
-    density: Density,
-    fontFamilyResolver: FontFamily.Resolver
-): Paragraph = AndroidParagraph(
-    AndroidParagraphIntrinsics(
-        text = text,
-        style = style,
-        placeholders = placeholders,
-        spanStyles = spanStyles,
-        fontFamilyResolver = fontFamilyResolver,
-        density = density
-    ),
-    maxLines,
-    ellipsis,
-    constraints
-)
-
-internal actual fun ActualParagraph(
-    paragraphIntrinsics: ParagraphIntrinsics,
-    maxLines: Int,
-    ellipsis: Boolean,
-    constraints: Constraints
-): Paragraph = AndroidParagraph(
-    paragraphIntrinsics as AndroidParagraphIntrinsics,
-    maxLines,
-    ellipsis,
-    constraints
-)
+@OptIn(InternalPlatformTextApi::class)
+private fun CharSequence.attachIndentationFixSpan(): CharSequence {
+    val spannable = if (this is Spannable) this else SpannableString(this)
+    spannable.setSpan(IndentationFixSpan(), spannable.length - 1, spannable.length - 1)
+    return spannable
+}
