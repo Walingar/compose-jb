@@ -15,16 +15,54 @@
  */
 package androidx.compose.ui.test
 
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
+import org.jetbrains.skiko.SkikoInputModifiers
+import org.jetbrains.skiko.SkikoKey
+import org.jetbrains.skiko.SkikoKeyboardEvent
+import org.jetbrains.skiko.SkikoKeyboardEventKind
 
 /**
  * The [KeyEvent] is usually created by the system. This function creates an instance of
  * [KeyEvent] that can be used in tests.
  */
 internal actual fun keyEvent(
-    key: Key, keyEventType: KeyEventType, modifiers: Int
-): KeyEvent = TODO()
+    key: Key,
+    keyEventType: KeyEventType,
+    modifiers: Int
+): KeyEvent {
+    return KeyEvent(
+        SkikoKeyboardEvent(
+            key = SkikoKey.values().firstOrNull {
+                it.platformKeyCode.toLong() == key.keyCode
+            } ?: error("SkikoKey not found for key=$key"),
+            modifiers = SkikoInputModifiers(modifiers),
+            kind = when (keyEventType) {
+                KeyEventType.KeyUp -> SkikoKeyboardEventKind.UP
+                KeyEventType.KeyDown -> SkikoKeyboardEventKind.DOWN
+                else -> error("Unknown key event type: $keyEventType")
 
-internal actual fun Int.updatedKeyboardModifiers(key: Key, down: Boolean): Int = this // TODO: implement updatedKeyboardModifiers
+            },
+            timestamp = 0L,
+            platform = null
+        )
+    )
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+internal actual fun Int.updatedKeyboardModifiers(key: Key, down: Boolean): Int {
+    val mask = when (key) {
+        Key.ShiftLeft, Key.ShiftRight -> SkikoInputModifiers.SHIFT
+        Key.CtrlLeft, Key.CtrlRight -> SkikoInputModifiers.CONTROL
+        Key.AltLeft, Key.AltRight -> SkikoInputModifiers.ALT
+        Key.MetaLeft, Key.MetaRight -> SkikoInputModifiers.META
+        else -> null
+    }
+    return if (mask != null) {
+        if (down) this or mask.value else this xor mask.value
+    } else {
+        this
+    }
+}
