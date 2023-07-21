@@ -77,7 +77,7 @@ private val BottomSheets = Component(
     // No bottom sheet icon
     guidelinesUrl = "$ComponentGuidelinesUrl/bottom-sheets",
     docsUrl = "$DocsUrl#bottomsheet",
-    sourceUrl = "$Material3SourceUrl/ModalBottomSheet.android.kt",
+    sourceUrl = "$Material3SourceUrl/ModalBottomSheet.kt",
     examples = BottomSheetExamples
 )
 

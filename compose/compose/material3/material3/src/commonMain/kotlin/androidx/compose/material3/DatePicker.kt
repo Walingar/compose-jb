@@ -107,9 +107,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import java.lang.Integer.max
-import java.text.NumberFormat
-import java.util.Locale
+import kotlin.math.max
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -470,10 +468,10 @@ object DatePickerDefaults {
             }
 
             val headlineDescription = when (displayMode.value) {
-                DisplayMode.Picker -> getString(Strings.DatePickerHeadlineDescription)
-                DisplayMode.Input -> getString(Strings.DateInputHeadlineDescription)
+                DisplayMode.Picker -> getString(Strings.DatePickerHeadlineDescription).format(verboseDateDescription)
+                DisplayMode.Input -> getString(Strings.DateInputHeadlineDescription).format(verboseDateDescription)
                 else -> ""
-            }.format(verboseDateDescription)
+            }
 
             Text(
                 text = headlineText,
@@ -747,7 +745,7 @@ class DatePickerFormatter constructor(
     internal fun formatMonthYear(
         month: CalendarMonth?,
         calendarModel: CalendarModel,
-        locale: Locale
+        locale: CalendarLocale
     ): String? {
         if (month == null) return null
         return calendarModel.formatWithSkeleton(month, yearSelectionSkeleton, locale)
@@ -756,7 +754,7 @@ class DatePickerFormatter constructor(
     internal fun formatDate(
         date: CalendarDate?,
         calendarModel: CalendarModel,
-        locale: Locale,
+        locale: CalendarLocale,
         forContentDescription: Boolean = false
     ): String? {
         if (date == null) return null
@@ -792,7 +790,7 @@ class DatePickerFormatter constructor(
  * Represents the different modes that a date picker can be at.
  */
 @Immutable
-@JvmInline
+@kotlin.jvm.JvmInline
 @ExperimentalMaterial3Api
 value class DisplayMode internal constructor(internal val value: Int) {
 
@@ -1893,16 +1891,6 @@ private fun customScrollActions(
             action = scrollDownAction
         )
     )
-}
-
-/**
- * Returns a string representation of an integer at the current Locale.
- */
-internal fun Int.toLocalString(): String {
-    val formatter = NumberFormat.getIntegerInstance()
-    // Eliminate any use of delimiters when formatting the integer.
-    formatter.isGroupingUsed = false
-    return formatter.format(this)
 }
 
 internal val RecommendedSizeForAccessibility = 48.dp

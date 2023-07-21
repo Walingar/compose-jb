@@ -21,7 +21,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 
 @Immutable
-@JvmInline
+@kotlin.jvm.JvmInline
 internal value class Strings private constructor(
     @Suppress("unused") private val value: Int = nextId()
 ) {
@@ -99,6 +99,4 @@ internal value class Strings private constructor(
 @ReadOnlyComposable
 internal expect fun getString(string: Strings): String
 
-@Composable
-@ReadOnlyComposable
-internal expect fun getString(string: Strings, vararg formatArgs: Any): String
+internal expect fun String.format(vararg formatArgs: Any?): String
