@@ -472,6 +472,8 @@ includeProject(":lint-checks:integration-tests")
 includeProject(":internal-testutils-fonts", "testutils/testutils-fonts", [BuildType.MAIN, BuildType.GLANCE, BuildType.MEDIA, BuildType.FLAN, BuildType.COMPOSE, BuildType.WEAR])
 includeProject(":internal-testutils-runtime", "testutils/testutils-runtime", [BuildType.MAIN, BuildType.FLAN, BuildType.COMPOSE, BuildType.MEDIA, BuildType.WEAR, BuildType.CAMERA])
 includeProject(":internal-testutils-gradle-plugin", "testutils/testutils-gradle-plugin", [BuildType.MAIN, BuildType.FLAN, BuildType.COMPOSE, BuildType.TOOLS])
+includeProject(":internal-testutils-kmp", "testutils/testutils-kmp", [BuildType.MAIN, BuildType.KMP, BuildType.COMPOSE])
+
 
 // Workaround for b/203825166
 // Without it there is an error appear when trying to publish to maven local:
