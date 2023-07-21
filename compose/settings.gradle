@@ -365,6 +365,12 @@ includeProject(":compose:compiler:compiler-hosted:integration-tests:kotlin-compi
 includeProject(":compose:compiler:compiler-daemon", [BuildType.COMPOSE])
 includeProject(":compose:compiler:compiler-daemon:integration-tests", [BuildType.COMPOSE])
 
+includeProject(":compose:desktop", [BuildType.COMPOSE])
+includeProject(":compose:desktop:desktop", [BuildType.COMPOSE])
+includeProject(":compose:desktop:desktop:desktop-samples", "compose/desktop/desktop/samples", [BuildType.COMPOSE])
+includeProject(":compose:desktop:desktop:desktop-samples-material3", "compose/desktop/desktop/samples-material3", [BuildType.COMPOSE])
+includeProject(":compose:mpp", [BuildType.COMPOSE])
+includeProject(":compose:mpp:demo", [BuildType.COMPOSE])
 // workaround for issue that on linux and windows CommonizeCInterop task fails
 // It seems that this workaround can be removed after Kotlin 1.8.20
 if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX()) {
